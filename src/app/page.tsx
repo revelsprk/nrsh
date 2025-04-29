@@ -8,6 +8,7 @@ import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { decode } from "he";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 
 type YouTubeVideo = {
   id: {
@@ -52,8 +53,10 @@ export default function Home() {
       <div className="md:w-3/4 mx-auto mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         {videos.map((video: YouTubeVideo) => (
           <div key={video.id.videoId}>
-            <Image src={video.snippet.thumbnails.medium.url} alt="thumbnail" width={100} height={100} className="w-full max-w-md md:rounded-md"/>
-            <div className="mx-2"><h2 className="font-semibold mt-2">{decode(video.snippet.title)}</h2></div>
+            <Link href={`/watch?v=${video.id.videoId}`}>
+              <Image src={video.snippet.thumbnails.medium.url} alt="thumbnail" width={100} height={100} className="w-full max-w-md md:rounded-md"/>
+              <div className="mx-2"><h2 className="font-semibold mt-2">{decode(video.snippet.title)}</h2></div>
+            </Link>
           </div>
         ))}
       </div>
