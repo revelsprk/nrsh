@@ -59,12 +59,14 @@ export default function WatchClient() {
     }
 
     return (
-        <div className="md:w-3/4 mx-auto mt-10">
-            <div className="aspect-video mb-4">
+        <div className="md:w-3/4 mx-auto md:mt-10">
+            <div className="aspect-video">
                 <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${videoId}`} title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"/>
             </div>
-            <h1 className="text-xl font-bold mb-2">{decode(video.snippet.title)}</h1>
-            <p className="text-gray-600 whitespace-pre-line" dangerouslySetInnerHTML={{__html: video.snippet.description.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">$1</a>'),}}/>
+            <div className="m-2 md:m-0 md:mt-4">
+                <h1 className="text-xl font-bold mb-2">{decode(video.snippet.title)}</h1>
+                <p className="text-gray-600 whitespace-pre-line" dangerouslySetInnerHTML={{__html: video.snippet.description.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">$1</a>'),}}/>
+            </div>
         </div>
     );
 }
