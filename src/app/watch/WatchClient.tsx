@@ -125,7 +125,7 @@ export default function WatchClient() {
                         <p className="text-gray-500">字幕が見つかりませんでした。</p>
                     ) : (
                         subtitles.map((line, index) => (
-                            <p key={index} className="text-lg">
+                            <p key={index} className="text-xl">
                                 {line.text}
                             </p>
                         ))
