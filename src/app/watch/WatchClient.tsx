@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { decode } from "he";
+import { FiChevronDown, FiLoader } from "react-icons/fi"; // FiLoaderをインポート
 
 type Subtitle = { start: number; dur: number; text: string };
 type SubtitlesMap = { [lang: string]: Subtitle[] };
@@ -27,6 +28,7 @@ type YouTubeVideo = {
 export default function WatchClient() {
     const searchParams = useSearchParams();
     const videoId = searchParams.get("v");
+    const startTime = searchParams.get("t"); // URLの?tパラメータを取得
 
     const [video, setVideo] = useState<YouTubeVideo | null>(null);
     const [subtitlesMap, setSubtitlesMap] = useState<SubtitlesMap>({});
@@ -83,11 +85,19 @@ export default function WatchClient() {
         return <div className="text-center mt-10">動画IDが指定されていません。</div>;
     }
 
+    // video が null でないことを確認するガード節を追加
     if (!video) {
-        return <div className="text-center mt-8">Loading...</div>;
+        return null; // video がない場合は何も表示しない
     }
 
     const currentSubtitles = selectedLang ? subtitlesMap[selectedLang] : [];
+
+    const handleSubtitleClick = (start: number) => {
+        // 現在のURLに?t=秒数を追加して遷移
+        window.location.href = `?v=${videoId}&t=${start}`;
+    };
+
+    const currentStartTime = startTime ? parseInt(startTime) : 0;
 
     return (
         <div className="md:w-3/4 mx-auto md:mt-8 flex flex-col md:flex-row gap-4">
@@ -97,7 +107,7 @@ export default function WatchClient() {
                     <iframe
                         width="100%"
                         height="100%"
-                        src={`https://www.youtube.com/embed/${videoId}`}
+                        src={`https://www.youtube.com/embed/${videoId}?start=${currentStartTime}`} // 秒数で開始位置を指定
                         title="YouTube video player"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                     />
@@ -127,28 +137,46 @@ export default function WatchClient() {
             <div className="md:w-1/2">
                 {/* 字幕内容 */}
                 <div className="p-6 rounded-md max-h-96 overflow-y-auto space-y-2">
-                <div className="mb-4 sticky top-0">
-                    {Object.keys(subtitlesMap).length > 0 && (
-                        <select
-                            className="border bg-gray-50 rounded-md px-2 py-1"
-                            value={selectedLang ?? ""}
-                            onChange={(e) => setSelectedLang(e.target.value)}
-                        >
-                            {Object.keys(subtitlesMap).map((lang) => (
-                                <option key={lang} value={lang}>
-                                    {lang.toUpperCase()}
-                                </option>
-                            ))}
-                        </select>
-                    )}
-                </div>
-                    {subtitlesError ? (
+                    <div className="mb-4 sticky top-0">
+                        {Object.keys(subtitlesMap).length > 0 && (
+                            <div className="relative inline-block w-32">
+                                {/* selectボックス */}
+                                <select
+                                    className="block w-full pl-4 py-2 text-sm bg-white border rounded-md shadow-sm focus:outline-none focus:ring-2 ring-offset-2 duration-200 appearance-none"
+                                    value={selectedLang ?? ""}
+                                    onChange={(e) => setSelectedLang(e.target.value)}
+                                >
+                                    {Object.keys(subtitlesMap).map((lang) => (
+                                        <option key={lang} value={lang}>
+                                            {lang.toUpperCase()}
+                                        </option>
+                                    ))}
+                                </select>
+                                {/* アイコン */}
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                    <FiChevronDown className="text-gray-400" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 字幕ローディング表示 */}
+                    {Object.keys(subtitlesMap).length === 0 ? (
+                        <div className="flex justify-center items-center">
+                            <FiLoader className="animate-spin text-gray-400" size={24} />
+                            <span className="ml-2 text-gray-400">Loading subtitles...</span>
+                        </div>
+                    ) : subtitlesError ? (
                         <p className="text-gray-500">字幕が取得できませんでした。</p>
                     ) : !currentSubtitles || currentSubtitles.length === 0 ? (
                         <p className="text-gray-500">字幕が見つかりませんでした。</p>
                     ) : (
                         currentSubtitles.map((line, index) => (
-                            <p key={index} className="text-xl">
+                            <p
+                                key={index}
+                                className="text-xl cursor-pointer"
+                                onClick={() => handleSubtitleClick(line.start)}
+                            >
                                 {line.text}
                             </p>
                         ))
