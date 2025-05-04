@@ -48,7 +48,6 @@ export default function WatchClient() {
         };
         fetchSubtitles();
     }, [videoId]);
-    
 
     // 動画の情報取得
     useEffect(() => {
@@ -97,7 +96,7 @@ export default function WatchClient() {
                         height="100%"
                         src={`https://www.youtube.com/embed/${videoId}`}
                         title="YouTube video player"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                     />
                 </div>
                 <div className="m-2 md:m-0 md:mt-4">

@@ -45,7 +45,7 @@ export default function Tree() {
     return (
         <div>
             <Header />
-            <div className="md:w-1/2 mx-auto mt-8">
+            <div className="md:w-1/2 mx-auto md:mt-8 p-4 md:p-0">
                 <h1 className="text-2xl font-semibold">Root</h1>
                 <div ref={containerRef} className="h-96 border rounded-md mt-2 shadow-md" />
             </div>
