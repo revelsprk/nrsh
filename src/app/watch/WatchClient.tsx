@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { decode } from "he";
 
+type Subtitle = { start: number; dur: number; text: string };
+type SubtitlesMap = { [lang: string]: Subtitle[] };
+
 type YouTubeVideo = {
     id: string;
     snippet: {
@@ -16,6 +19,9 @@ type YouTubeVideo = {
             };
         };
     };
+    statistics: {
+        viewCount: string;
+    };
 };
 
 export default function WatchClient() {
@@ -23,9 +29,8 @@ export default function WatchClient() {
     const videoId = searchParams.get("v");
 
     const [video, setVideo] = useState<YouTubeVideo | null>(null);
-    const [subtitles, setSubtitles] = useState<{ start: number; dur: number; text: string }[]>([
-        { start: 0, dur: 5, text: "字幕が取得できませんでした。" }
-    ]);  // ダミーデータをセット
+    const [subtitlesMap, setSubtitlesMap] = useState<SubtitlesMap>({});
+    const [selectedLang, setSelectedLang] = useState<string | null>(null);
     const [subtitlesError, setSubtitlesError] = useState(false);
 
     // 字幕の取得
@@ -34,16 +39,14 @@ export default function WatchClient() {
             if (!videoId) return;
             try {
                 const res = await axios.get(`/api/captions?videoId=${videoId}`);
-                setSubtitles(res.data.subtitles);  // 字幕データをセット
-                setSubtitlesError(false);  // 成功したらエラー状態をリセット
-            } catch (err: unknown) {
-                // 型アサーションで err を AxiosError として扱う
-                if (axios.isAxiosError(err)) {
-                    // console.error("字幕の取得に失敗しました", err.response?.data || err);
-                } else {
-                    // console.error("予期しないエラーが発生しました", err);
+                setSubtitlesMap(res.data.subtitles);
+                const langs = Object.keys(res.data.subtitles);
+                if (langs.length > 0) {
+                    setSelectedLang(langs[0]); // 最初の言語を選択
                 }
-                setSubtitlesError(true);  // エラーが発生した場合はエラーフラグを立てる
+                setSubtitlesError(false);
+            } catch {
+                setSubtitlesError(true);
             }
         };
         fetchSubtitles();
@@ -59,7 +62,7 @@ export default function WatchClient() {
                     `https://www.googleapis.com/youtube/v3/videos`,
                     {
                         params: {
-                            part: "snippet",
+                            part: "snippet,statistics",
                             id: videoId,
                             key: process.env.NEXT_PUBLIC_YOUTUBE_API_KEY,
                         },
@@ -76,15 +79,15 @@ export default function WatchClient() {
         fetchVideoDetails();
     }, [videoId]);
 
-    // videoIdが指定されていない場合
     if (!videoId) {
         return <div className="text-center mt-10">動画IDが指定されていません。</div>;
     }
 
-    // 動画データがまだロードされていない場合
     if (!video) {
         return <div className="text-center mt-8">Loading...</div>;
     }
+
+    const currentSubtitles = selectedLang ? subtitlesMap[selectedLang] : [];
 
     return (
         <div className="md:w-3/4 mx-auto md:mt-8 flex flex-col md:flex-row gap-4">
@@ -101,6 +104,11 @@ export default function WatchClient() {
                 </div>
                 <div className="m-2 md:m-0 md:mt-4">
                     <h1 className="text-xl font-bold mb-2">{decode(video.snippet.title)}</h1>
+
+                    <p className="text-sm text-gray-500 mb-2">
+                        {Number(video.statistics.viewCount).toLocaleString()} views
+                    </p>
+
                     <div className="hidden md:flex max-h-48 bg-gray-200/50 rounded-md p-4 overflow-y-auto">
                         <p
                             className="text-gray-600 whitespace-pre-line"
@@ -117,13 +125,29 @@ export default function WatchClient() {
 
             {/* 字幕表示エリア */}
             <div className="md:w-1/2">
-                <div className="p-8 rounded-md max-h-96 overflow-y-auto space-y-2">
+                {/* 字幕内容 */}
+                <div className="p-6 rounded-md max-h-96 overflow-y-auto space-y-2">
+                <div className="mb-4 sticky top-0">
+                    {Object.keys(subtitlesMap).length > 0 && (
+                        <select
+                            className="border bg-gray-50 rounded-md px-2 py-1"
+                            value={selectedLang ?? ""}
+                            onChange={(e) => setSelectedLang(e.target.value)}
+                        >
+                            {Object.keys(subtitlesMap).map((lang) => (
+                                <option key={lang} value={lang}>
+                                    {lang.toUpperCase()}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                </div>
                     {subtitlesError ? (
                         <p className="text-gray-500">字幕が取得できませんでした。</p>
-                    ) : subtitles.length === 0 ? (
+                    ) : !currentSubtitles || currentSubtitles.length === 0 ? (
                         <p className="text-gray-500">字幕が見つかりませんでした。</p>
                     ) : (
-                        subtitles.map((line, index) => (
+                        currentSubtitles.map((line, index) => (
                             <p key={index} className="text-xl">
                                 {line.text}
                             </p>
