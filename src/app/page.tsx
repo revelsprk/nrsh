@@ -52,7 +52,7 @@ export default function Home() {
 
       <div className="md:w-3/4 mx-auto mt-8">
       {videos.length === 0 ? (
-        <Image src="/search-pana.svg" alt="search illustration" width={100} height={100} className="md:w-3/4 w-full select-none opacity-50 mx-auto" />
+        <Image src="/search-pana.svg" alt="search illustration" width={100} height={100} className="md:w-3/4 w-full select-none opacity-75 mx-auto" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {videos.map((video: YouTubeVideo) => (
